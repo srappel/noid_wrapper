@@ -87,11 +87,26 @@ class NoidClient:
 
         return results
     
-    def fetch(self, id_string):
-        """Return the bound values for a given id string"""
+    def fetch(self, id_string, elements=None):
+        """
+        Return the bound values for a given id string. Optionally fetch specific elements.
+        
+        Args:
+            id_string (str): The identifier to fetch information for.
+            elements (list, optional): A list of elements to fetch. Fetches all elements if None.
+        
+        Returns:
+            str: The fetched information for the given ID.
+        """
         self.logger.info(f"Fetching info about {id_string}...")
-        result = self._run_noid_command("fetch", id_string)
-
+        
+        if elements:
+            # If specific elements are provided, append them to the command
+            result = self._run_noid_command("fetch", id_string, *elements)
+        else:
+            # Fetch all elements if no specific elements are provided
+            result = self._run_noid_command("fetch", id_string)
+        
         if result:
             self.logger.info(f"Fetched info for ID: {id_string}\n")
             self.logger.info(f"{result}")
@@ -99,6 +114,7 @@ class NoidClient:
         else:
             self.logger.error("Fetching failed")
             return None
+
 
 
     def _run_noid_command(self, *args):
@@ -127,4 +143,4 @@ if __name__ == "__main__":
 
     client.bind_multiple(ark, bind_params)
 
-    print(client.fetch(ark))
+    print(client.fetch(ark, elements=["where", "author"]))
