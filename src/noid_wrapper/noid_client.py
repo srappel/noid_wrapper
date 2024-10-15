@@ -20,25 +20,25 @@ class NoidClient:
         self.logger = logging.getLogger(__name__)
 
     def mint(self, count=1):
-        """Mint a specified number of ARKs. Default is 1."""
-        self.logger.info(f"Minting {count} new ARK(s)...")
+        """Mint a specified number of IDs. Default is 1."""
+        self.logger.info(f"Minting {count} new ID(s)...")
         result = self._run_noid_command("mint", str(count))
 
         if result:
             # Strip the 'id: ' part from the result
-            ark_id = result.split("id: ")[1].strip()
-            self.logger.info(f"Minted ARK: {ark_id}")
-            return ark_id
+            id_string = result.split("id: ")[1].strip()
+            self.logger.info(f"Minted ID: {id_string}")
+            return id_string
         else:
-            self.logger.error("Minting failed or returned no ARK")
+            self.logger.error("Minting failed or returned no ID")
             return None
 
-    def bind(self, ark, element, value=None, how='set'):
+    def bind(self, id_string, element, value=None, how='set'):
         """
-        Bind a value to an existing ARK using the specified method (How).
+        Bind a value to an existing ID using the specified method (How).
         
         Args:
-            ark (str): The ARK identifier.
+            id_string (str): The id_string identifier.
             element (str): The Element name to bind (use ':' or ':-' for stdin).
             value (str, optional): The value to bind to the element (optional for stdin input).
             how (str, optional): The method of binding (e.g., 'new', 'replace', 'set', etc.). Defaults to 'set'.
@@ -48,14 +48,14 @@ class NoidClient:
 
         See https://metacpan.org/dist/Noid/view/noid#noid-bind-How-Id-Element-Value
         """
-        self.logger.info(f"Binding element '{element}' to ARK {ark} using '{how}' method...")
+        self.logger.info(f"Binding element '{element}' to id_string {id_string} using '{how}' method...")
 
         if element in [':', ':-'] and value is None:
             # For stdin-based input, we let NOID read from standard input
-            return self._run_noid_command("bind", how, ark, element)
+            return self._run_noid_command("bind", how, id_string, element)
         elif value:
             # Bind normally with element and value
-            return self._run_noid_command("bind", how, ark, element, value)
+            return self._run_noid_command("bind", how, id_string, element, value)
         else:
             self.logger.error("Element and Value must be provided or use stdin with ':' or ':-'")
             raise ValueError("Invalid bind arguments: must provide Element and Value or use stdin")
@@ -74,7 +74,7 @@ class NoidClient:
 
 if __name__ == '__main__':
     client = NoidClient()
-    ark = client.mint(1)
+    ark = client.mint()
     print(f"Minted ARK(s): {ark}")
 
     bind_param = ("where", "www.uwm.edu")
