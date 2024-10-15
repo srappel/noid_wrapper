@@ -86,6 +86,20 @@ class NoidClient:
             results.append(result)
 
         return results
+    
+    def fetch(self, id_string):
+        """Return the bound values for a given id string"""
+        self.logger.info(f"Fetching info about {id_string}...")
+        result = self._run_noid_command("fetch", id_string)
+
+        if result:
+            self.logger.info(f"Fetched info for ID: {id_string}\n")
+            self.logger.info(f"{result}")
+            return result
+        else:
+            self.logger.error("Fetching failed")
+            return None
+
 
     def _run_noid_command(self, *args):
         """Run a NOID command using subprocess."""
@@ -112,3 +126,5 @@ if __name__ == "__main__":
     bind_params = {"where": "uwm.edu", "author": "Stephen", "date": "2024-10-15"}
 
     client.bind_multiple(ark, bind_params)
+
+    print(client.fetch(ark))
