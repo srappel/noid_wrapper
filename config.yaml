@@ -3,4 +3,4 @@ NOID:
   db_path: "." # Default is "." which will look in ./NOID
 
 Logging:
-  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
