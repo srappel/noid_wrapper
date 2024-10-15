@@ -8,9 +8,11 @@ authors = ["Stephen Appel <srappel@uwm.edu>"]
 python = "^3.8"
 
 [tool.poetry.dev-dependencies]
+black = "^22.0"
+click = "^8.0"
+exceptiongroup = "1.2.2"
+flake8 = "^7.1"
 pytest = "^7.0"
-#flake8 = "^4.0"
-#black = "^22.0"
 
 [build-system]
 requires = ["setuptools", "wheel"]
