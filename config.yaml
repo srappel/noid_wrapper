@@ -1,0 +1,6 @@
+NOID:
+  noid_path: "/usr/local/bin/noid" 
+  namespace: "ark:/77981/gmgs"
+
+Logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
