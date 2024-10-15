@@ -7,9 +7,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../s
 
 from noid_wrapper.noid_client import NoidClient
 
+
 @pytest.fixture
 def noid_client():
     """Fixture to create a NoidClient instance."""
     return NoidClient(config_path="config.yaml")
-
-

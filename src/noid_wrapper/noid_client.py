@@ -145,19 +145,17 @@ class NoidClient:
         else:
             self.logger.error("Fetching failed")
             return None
-        
 
     def validate(self, id_string):
         """Validate an identifier."""
         self.logger.info(f"Validating ID {id_string}...")
         result = self._run_noid_command("validate", "-", id_string)
-        
+
         if "iderr" in result:
             self.logger.error(f"Validation failed for {id_string}: {result}")
             return False
         self.logger.info(f"Validation successful for {id_string}: {result}")
         return True
-
 
     def _run_noid_command(self, *args):
         """Run a NOID command using subprocess."""
@@ -173,13 +171,13 @@ class NoidClient:
 
 if __name__ == "__main__":
     client = NoidClient()
-    ark = client.mint()
+    # ark = client.mint() # switch out with line below if you actually want to mint real ids
+    ark = "77981/gmgs893277"  # to avoid minting real ids during testing
     print(f"Minted ARK(s): {ark}")
 
-    # bind_param = ("where", "www.uwm.edu")
-    # print(bind_param[0])
-    # print(bind_param[1])
-    # client.bind(ark, bind_param[0], bind_param[1])
+    bind_param = ("how", "python!")
+
+    client.bind(ark, bind_param[0], bind_param[1])
 
     bind_params = {"where": "uwm.edu", "author": "Stephen", "date": "2024-10-15"}
 
@@ -187,6 +185,8 @@ if __name__ == "__main__":
 
     print(client.fetch(ark, elements=["where", "author"]))
 
-    print(client.get(ark, ["where"])) # elements= is optional?
+    print(client.get(ark, ["where"]))  # elements= is optional
+    print(client.get(ark, elements=["how"]))
 
     client.validate(ark)
+    client.fetch(ark)
