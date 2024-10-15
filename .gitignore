@@ -1,6 +1,7 @@
 __pycache__/
 .venv/
 venv/
+NOID/
 .pytest_cache/
 *.pyc
 *.pyo

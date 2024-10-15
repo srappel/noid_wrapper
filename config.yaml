@@ -1,6 +1,6 @@
 NOID:
-  noid_path: "/usr/local/bin/noid" 
-  namespace: "ark:/77981/gmgs"
+  noid_path: "/usr/local/bin/noid"
+  db_path: "." # Default is "." which will look in ./NOID
 
 Logging:
   level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
