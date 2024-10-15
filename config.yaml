@@ -1,6 +1,6 @@
 NOID:
   noid_path: "/usr/local/bin/noid"
-  db_path: "." # Default is "." which will look in ./NOID
+  db_path: "/home/srappel/noid_wrapper" # Default is "." which will look in ./NOID
 
 Logging:
   level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
