@@ -86,27 +86,58 @@ class NoidClient:
             results.append(result)
 
         return results
-    
-    def fetch(self, id_string, elements=None):
+
+    def get(self, id_string, elements=None):
         """
-        Return the bound values for a given id string. Optionally fetch specific elements.
-        
+        Return the bound values for a given id string.
+        Optionally get specific elements.
+
         Args:
             id_string (str): The identifier to fetch information for.
             elements (list, optional): A list of elements to fetch. Fetches all elements if None.
-        
+
+        Returns:
+            str: The information for the given ID.
+
+        Use "fetch" for more verbose, human readable data with associated key values.
+        """
+        self.logger.info(f"Getting info about {id_string}...")
+
+        if elements:
+            # If specific elements are provided, append them to the command
+            result = self._run_noid_command("get", id_string, *elements)
+        else:
+            # Fetch all elements if no specific elements are provided
+            result = self._run_noid_command("get", id_string)
+
+        if result:
+            self.logger.info(f"Got info for ID: {id_string}\n")
+            self.logger.info(f"{result}")
+            return result
+        else:
+            self.logger.error("Get command failed")
+            return None
+
+    def fetch(self, id_string, elements=None):
+        """
+        Return the bound values for a given id string. Optionally fetch specific elements.
+
+        Args:
+            id_string (str): The identifier to fetch information for.
+            elements (list, optional): A list of elements to fetch. Fetches all elements if None.
+
         Returns:
             str: The fetched information for the given ID.
         """
         self.logger.info(f"Fetching info about {id_string}...")
-        
+
         if elements:
             # If specific elements are provided, append them to the command
             result = self._run_noid_command("fetch", id_string, *elements)
         else:
             # Fetch all elements if no specific elements are provided
             result = self._run_noid_command("fetch", id_string)
-        
+
         if result:
             self.logger.info(f"Fetched info for ID: {id_string}\n")
             self.logger.info(f"{result}")
@@ -114,7 +145,18 @@ class NoidClient:
         else:
             self.logger.error("Fetching failed")
             return None
+        
 
+    def validate(self, id_string):
+        """Validate an identifier."""
+        self.logger.info(f"Validating ID {id_string}...")
+        result = self._run_noid_command("validate", "-", id_string)
+        
+        if "iderr" in result:
+            self.logger.error(f"Validation failed for {id_string}: {result}")
+            return False
+        self.logger.info(f"Validation successful for {id_string}: {result}")
+        return True
 
 
     def _run_noid_command(self, *args):
@@ -144,3 +186,7 @@ if __name__ == "__main__":
     client.bind_multiple(ark, bind_params)
 
     print(client.fetch(ark, elements=["where", "author"]))
+
+    print(client.get(ark, ["where"])) # elements= is optional?
+
+    client.validate(ark)

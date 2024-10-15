@@ -6,3 +6,4 @@ NOID/
 *.pyc
 *.pyo
 .DS_Store
+.vscode/settings.json
