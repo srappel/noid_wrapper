@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+src/noid_wrapper/noid_client.py
+src/noid_wrapper.egg-info/PKG-INFO
+src/noid_wrapper.egg-info/SOURCES.txt
+src/noid_wrapper.egg-info/dependency_links.txt
+src/noid_wrapper.egg-info/top_level.txt
+tests/test_getfetch.py
+tests/test_noid_client.py
+tests/test_noid_wrapper.py
