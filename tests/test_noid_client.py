@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from noid_wrapper.noid_client import NoidClient
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, ANY
 
 
 @pytest.fixture
@@ -176,3 +176,149 @@ def test_process_metadata_files(mock_rglob, noid_client):
     assert len(documents) == 1
     # Adjust the test to handle ark_id being a list
     assert documents[0][0] == ["ark:/77981/gmgs1zcrnw"]
+
+@patch.object(NoidClient, 'bind_multiple')
+@patch.object(NoidClient, 'validate', return_value=True)
+@patch("pathlib.Path.rglob")
+def test_bind_directory_success(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+    """Test binding directory with valid metadata files."""
+    # Mock a Path object for the file
+    mock_path = tmp_path / "metadata.json"
+    mock_rglob.return_value = [mock_path]
+
+    # Create valid metadata for testing
+    metadata = {
+        "dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"],
+        "dct_title_s": "Test Title",
+        "dct_accessRights_s": "Public",
+        "dct_references_s": json.dumps({
+            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
+            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw"
+        })
+    }
+
+    with mock_path.open("w") as f:
+        json.dump(metadata, f)
+
+    param_map = {
+        "where": "dct_references_s",
+        "title": "dct_title_s",
+        "download": "dct_references_s",
+        "identifier": "dct_identifier_sm",
+        "ogm_aardvark_id": "id",
+        "access": "dct_accessRights_s",
+    }
+
+    result = noid_client.bind_directory(tmp_path, param_map)
+
+    assert result["success"] == 1
+    assert result["failed"] == 0
+    assert result["warning"] == 0
+    mock_bind_multiple.assert_called_once_with("77981/gmgs1zcrnw", ANY)
+
+
+@patch.object(NoidClient, 'bind_multiple')
+@patch.object(NoidClient, 'validate', return_value=False)
+@patch("pathlib.Path.rglob")
+def test_bind_directory_invalid_identifier(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+    """Test binding directory with invalid identifiers."""
+    # Mock a Path object for the file
+    mock_path = tmp_path / "metadata.json"
+    mock_rglob.return_value = [mock_path]
+
+    # Create metadata with invalid identifier for testing
+    metadata = {
+        "dct_identifier_sm": ["invalid_ark"],
+        "dct_title_s": "Test Title",
+        "dct_accessRights_s": "Public",
+        "dct_references_s": json.dumps({
+            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/invalid_ark",
+            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/invalid_ark"
+        })
+    }
+
+    with mock_path.open("w") as f:
+        json.dump(metadata, f)
+
+    param_map = {
+        "where": "dct_references_s",
+        "title": "dct_title_s",
+        "download": "dct_references_s",
+        "identifier": "dct_identifier_sm",
+        "ogm_aardvark_id": "id",
+        "access": "dct_accessRights_s",
+    }
+
+    result = noid_client.bind_directory(tmp_path, param_map)
+
+    assert result["success"] == 0
+    assert result["failed"] == 1
+    assert result["warning"] == 0
+    mock_bind_multiple.assert_not_called()
+
+
+@patch.object(NoidClient, 'bind_multiple')
+@patch.object(NoidClient, 'validate', return_value=True)
+@patch("pathlib.Path.rglob")
+def test_bind_directory_with_warnings(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+    """Test binding directory with missing elements (warnings)."""
+    # Mock a Path object for the file
+    mock_path = tmp_path / "metadata.json"
+    mock_rglob.return_value = [mock_path]
+
+    # Create metadata with missing title and accessRights
+    metadata = {
+        "dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"],
+        "dct_references_s": json.dumps({
+            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
+            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw"
+        })
+    }
+
+    with mock_path.open("w") as f:
+        json.dump(metadata, f)
+
+    param_map = {
+        "where": "dct_references_s",
+        "title": "dct_title_s",  # Missing title
+        "download": "dct_references_s",
+        "identifier": "dct_identifier_sm",
+        "ogm_aardvark_id": "id",
+        "access": "dct_accessRights_s",  # Missing accessRights
+    }
+
+    result = noid_client.bind_directory(tmp_path, param_map)
+
+    assert result["success"] == 1
+    assert result["failed"] == 0
+    assert result["warning"] == 2  # Title and accessRights missing
+    mock_bind_multiple.assert_called_once_with("77981/gmgs1zcrnw", ANY)
+
+
+@patch.object(NoidClient, 'bind_multiple')
+@patch.object(NoidClient, 'validate', return_value=True)
+@patch("pathlib.Path.rglob")
+def test_bind_directory_with_invalid_json(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+    """Test binding directory with invalid JSON in metadata file."""
+    # Mock a Path object for the file
+    mock_path = tmp_path / "metadata.json"
+    mock_rglob.return_value = [mock_path]
+
+    # Invalid JSON in metadata
+    invalid_metadata = '{"dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"], "dct_title_s": "Test Title"'
+
+    mock_path.write_text(invalid_metadata)
+
+    param_map = {
+        "where": "dct_references_s",
+        "title": "dct_title_s",
+        "download": "dct_references_s",
+        "identifier": "dct_identifier_sm",
+        "ogm_aardvark_id": "id",
+        "access": "dct_accessRights_s",
+    }
+
+    with pytest.raises(json.JSONDecodeError):
+        result = noid_client.bind_directory(tmp_path, param_map)
+
+    mock_bind_multiple.assert_not_called()

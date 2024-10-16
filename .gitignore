@@ -8,3 +8,4 @@ NOID/
 .DS_Store
 .vscode/settings.json
 noid_wrapper.egg-info/
+.coverage
