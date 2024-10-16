@@ -5,7 +5,7 @@ description = "Python wrapper for interacting with the NOID Perl utility."
 authors = ["Stephen Appel <srappel@uwm.edu>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 
 [tool.poetry.dev-dependencies]
 black = "^22.0"
