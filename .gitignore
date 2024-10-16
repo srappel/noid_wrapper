@@ -7,3 +7,4 @@ NOID/
 *.pyo
 .DS_Store
 .vscode/settings.json
+noid_wrapper.egg-info/
