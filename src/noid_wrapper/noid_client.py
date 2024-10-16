@@ -198,11 +198,11 @@ class NoidClient:
             bind_params["title"] = document[1].get(param_map["title"], "Untitled")
             if bind_params["title"] == "Untitled":
                 self.logger.warning(f"No title element found for {noid_id}.")
-                warnings +=1
+                warnings += 1
             bind_params["access"] = document[1].get(param_map["access"], "None")
             if bind_params["access"] == "None":
                 self.logger.warning(f"No access element found for {noid_id}.")
-                warnings +=1
+                warnings += 1
             # references
             try:
                 references = json.loads(document[1].get("dct_references_s", "{}"))
@@ -219,12 +219,12 @@ class NoidClient:
             )
             if bind_params["download"] == "Null":
                 self.logger.warning(f"No download url element found for {noid_id}.")
-                warnings +=1
+                warnings += 1
 
             bind_params["where"] = references.get("http://schema.org/url", "Null")
             if bind_params["where"] == "Null":
                 self.logger.warning(f"No where url element found for {noid_id}.")
-                warnings +=1
+                warnings += 1
 
             try:
                 self.bind_multiple(noid_id, bind_params)
@@ -234,8 +234,14 @@ class NoidClient:
                 failed_binds += 1
                 continue
 
-        self.logger.info(f"Successful binds: {successful_binds}, Failed binds: {failed_binds}, Warnings: {warnings}")
-        return {"success": successful_binds, "failed": failed_binds, "warning": warnings}
+        self.logger.info(
+            f"Successful binds: {successful_binds}, Failed binds: {failed_binds}, Warnings: {warnings}"
+        )
+        return {
+            "success": successful_binds,
+            "failed": failed_binds,
+            "warning": warnings,
+        }
 
     def validate(self, id_string):
         """Validate an identifier."""
