@@ -1,6 +1,8 @@
 import subprocess
 import yaml
 import logging
+from pathlib import Path
+import json
 
 
 class NoidClient:
@@ -82,6 +84,7 @@ class NoidClient:
         results = []
 
         for element, value in bind_params.items():
+            self.logger.debug(f"Binding {element} to {ark} with value {value}")
             result = self.bind(ark, element, value, how)
             results.append(result)
 
@@ -146,6 +149,62 @@ class NoidClient:
             self.logger.error("Fetching failed")
             return None
 
+    def process_metadata_files(self, base_dir) -> list:
+        """Recursively processes metadata files in directories to extract ARK IDs."""
+        documents = []
+        base_path = Path(base_dir)
+
+        for json_file in base_path.rglob("*.json"):
+            with json_file.open("r") as file:
+                data = json.load(file)
+                ark_id = data.get("dct_identifier_sm")
+                if ark_id:
+                    documents.append((ark_id, data))
+
+        return documents
+
+    def bind_directory(self, dir, param_map):
+        bind_params = {}
+        documents = self.process_metadata_files(Path(dir))
+        assert isinstance(documents, list)
+
+        for document in documents:
+
+            identifier = document[0][0]
+            noid_id = identifier.removeprefix("ark:/")
+            assert isinstance(noid_id, str)
+
+            if not self.validate(noid_id):
+                self.logger.warning(f"Invalid identifier {noid_id}.")
+                continue
+
+            ogm_aardvark_id = document[1].get(
+                param_map["ogm_aardvark_id"], identifier.replace("/", "-")
+            )
+
+            bind_params["identifier"] = identifier
+            bind_params["ogm_aardvark_id"] = ogm_aardvark_id
+            bind_params["title"] = document[1].get(param_map["title"], "Untitled")
+            bind_params["access"] = document[1].get(param_map["access"], "Public")
+
+            # references
+            try:
+                references = json.loads(document[1].get("dct_references_s", "{}"))
+            except (json.JSONDecodeError, TypeError):
+                references = {}
+                self.logger.warning(f"Invalid JSON in 'dct_references_s' for {noid_id}.")
+
+            bind_params["download"] = references.get(
+                "http://schema.org/downloadUrl", "Null"
+            )
+            bind_params["where"] = references.get("http://schema.org/url", "Null")
+
+            try:
+                result = self.bind_multiple(noid_id, bind_params)
+            except Exception as e:
+                self.logger.error(f"Error binding {noid_id}: {str(e)}")
+                continue
+
     def validate(self, id_string):
         """Validate an identifier."""
         self.logger.info(f"Validating ID {id_string}...")
@@ -154,7 +213,7 @@ class NoidClient:
         if "iderr" in result:
             self.logger.error(f"Validation failed for {id_string}: {result}")
             return False
-        self.logger.info(f"Validation successful for {id_string}: {result}")
+        self.logger.info(f"Validation successful for {id_string}")
         return True
 
     def _run_noid_command(self, *args):
@@ -170,23 +229,17 @@ class NoidClient:
 
 
 if __name__ == "__main__":
-    client = NoidClient()
-    # ark = client.mint() # switch out with line below if you actually want to mint real ids
-    ark = "77981/gmgs893277"  # to avoid minting real ids during testing
-    print(f"Minted ARK(s): {ark}")
+    client = NoidClient("/home/srappel/noid_wrapper/config.yaml")
 
-    bind_param = ("how", "python!")
+    param_map_agsl_aardvark = {
+        "where": "dct_references_s",
+        "title": "dct_title_s",
+        "download": "dct_references_s",
+        "identifier": "dct_identifier_sm",
+        "ogm_aardvark_id": "id",
+        "access": "dct_accessRights_s",
+    }
 
-    client.bind(ark, bind_param[0], bind_param[1])
-
-    bind_params = {"where": "uwm.edu", "author": "Stephen", "date": "2024-10-15"}
-
-    client.bind_multiple(ark, bind_params)
-
-    print(client.fetch(ark, elements=["where", "author"]))
-
-    print(client.get(ark, ["where"]))  # elements= is optional
-    print(client.get(ark, elements=["how"]))
-
-    client.validate(ark)
-    client.fetch(ark)
+    client.bind_directory(
+        "/home/srappel/noid_wrapper/metadata", param_map_agsl_aardvark
+    )
