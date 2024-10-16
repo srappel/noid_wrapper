@@ -168,6 +168,10 @@ class NoidClient:
         documents = self.process_metadata_files(Path(dir))
         assert isinstance(documents, list)
 
+        successful_binds = 0
+        failed_binds = 0
+        warnings = 0
+
         for document in documents:
 
             identifier = document[0][0]
@@ -175,35 +179,63 @@ class NoidClient:
             assert isinstance(noid_id, str)
 
             if not self.validate(noid_id):
-                self.logger.warning(f"Invalid identifier {noid_id}.")
+                self.logger.warning(f"Invalid identifier for {noid_id}.")
+                failed_binds += 1
                 continue
 
-            ogm_aardvark_id = document[1].get(
-                param_map["ogm_aardvark_id"], identifier.replace("/", "-")
-            )
+            try:
+                ogm_aardvark_id = document[1].get(
+                    param_map["ogm_aardvark_id"], identifier.replace("/", "-")
+                )
+            except Exception as e:
+                self.logger.warning(f"Invalid identifier for {noid_id}.")
+                failed_binds += 1
+                continue
 
             bind_params["identifier"] = identifier
             bind_params["ogm_aardvark_id"] = ogm_aardvark_id
-            bind_params["title"] = document[1].get(param_map["title"], "Untitled")
-            bind_params["access"] = document[1].get(param_map["access"], "Public")
 
+            bind_params["title"] = document[1].get(param_map["title"], "Untitled")
+            if bind_params["title"] == "Untitled":
+                self.logger.warning(f"No title element found for {noid_id}.")
+                warnings +=1
+            bind_params["access"] = document[1].get(param_map["access"], "None")
+            if bind_params["access"] == "None":
+                self.logger.warning(f"No access element found for {noid_id}.")
+                warnings +=1
             # references
             try:
                 references = json.loads(document[1].get("dct_references_s", "{}"))
             except (json.JSONDecodeError, TypeError):
                 references = {}
-                self.logger.warning(f"Invalid JSON in 'dct_references_s' for {noid_id}.")
+                self.logger.warning(
+                    f"Invalid JSON in 'dct_references_s' for {noid_id}."
+                )
+                failed_binds += 1
+                continue
 
             bind_params["download"] = references.get(
                 "http://schema.org/downloadUrl", "Null"
             )
+            if bind_params["download"] == "Null":
+                self.logger.warning(f"No download url element found for {noid_id}.")
+                warnings +=1
+
             bind_params["where"] = references.get("http://schema.org/url", "Null")
+            if bind_params["where"] == "Null":
+                self.logger.warning(f"No where url element found for {noid_id}.")
+                warnings +=1
 
             try:
-                result = self.bind_multiple(noid_id, bind_params)
+                self.bind_multiple(noid_id, bind_params)
+                successful_binds += 1
             except Exception as e:
                 self.logger.error(f"Error binding {noid_id}: {str(e)}")
+                failed_binds += 1
                 continue
+
+        self.logger.info(f"Successful binds: {successful_binds}, Failed binds: {failed_binds}, Warnings: {warnings}")
+        return {"success": successful_binds, "failed": failed_binds, "warning": warnings}
 
     def validate(self, id_string):
         """Validate an identifier."""
@@ -240,6 +272,8 @@ if __name__ == "__main__":
         "access": "dct_accessRights_s",
     }
 
-    client.bind_directory(
+    result = client.bind_directory(
         "/home/srappel/noid_wrapper/metadata", param_map_agsl_aardvark
     )
+
+    print(result)
