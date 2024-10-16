@@ -1,59 +1,79 @@
 
 # NOID Wrapper for Python
 
-A simple Python wrapper for interacting with the NOID (Nice Opaque Identifier) utility. This project provides methods for minting ARK identifiers and binding metadata to them using the NOID tool.
+This Python library provides a wrapper around the [NOID](https://metacpan.org/dist/Noid/view/noid) (Nice Opaque Identifier) Perl utility, making it easier to interact with NOID minting, binding, and retrieving functionality from Python scripts.
 
 ## Features
 
-- **Minting IDs**: Generate new identifiers using the NOID utility.
-- **Binding Metadata**: Bind metadata elements to IDs with the NOID `bind` command.
-- **Logging**: Configurable logging to track operations and commands.
-- **Configurable**: Customize NOID paths and other settings via a YAML configuration file.
-
-## Requirements
-
-- Python 3.8+
-- [NOID Utility](https://metacpan.org/dist/Noid/view/noid)
-- PyYAML (for reading configuration)
-- Subprocess (for running NOID commands)
+- **Minting Identifiers**: Easily mint a specified number of new identifiers.
+- **Binding Metadata**: Bind multiple metadata elements to identifiers.
+- **Fetching Metadata**: Retrieve metadata associated with an identifier.
+- **Validating ARKs**: Validate identifiers according to NOID rules.
+- **Process Metadata Files**: Recursively process metadata files in JSON format to extract and bind identifiers.
 
 ## Installation
 
-1. Clone the repository:
+1. **Fork & Clone the Repository:**
 
-   ```bash
-   git clone https://github.com/yourusername/noid_wrapper.git
-   ```
+2. **Create and Activate a Virtual Environment:**
 
-2. Create and activate a virtual environment:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
+3. **Install Dependencies:**
 
-3. Install the required Python dependencies in the pyproject.toml file:
+     ```bash
+     poetry install
+     ```
 
-   ```bash
-   pip install .
-   ```
+## Usage
 
-4. Ensure that the NOID utility is installed and accessible in your system's `PATH`.
+### Configuration
 
-## Configuration
-
-The project uses a YAML configuration file (`config.yaml`) to define paths and logging levels. Example `config.yaml`:
+The `config.yaml` file should specify the path to the NOID utility and the database location:
 
 ```yaml
 NOID:
   noid_path: "/usr/local/bin/noid"
   db_path: "/path/to/noid/database"
-
+  
 Logging:
   level: "INFO"
 ```
 
-Place this file in the root of your project.
+### Example: Binding Metadata from JSON Files
+
+To bind metadata from JSON files located in a directory, use the following Python code:
+
+```python
+from noid_client import NoidClient
+
+client = NoidClient("config.yaml")
+
+param_map_agsl_aardvark = {
+    "where": "dct_references_s",
+    "title": "dct_title_s",
+    "download": "dct_references_s",
+    "identifier": "dct_identifier_sm",
+    "ogm_aardvark_id": "id",
+    "access": "dct_accessRights_s",
+}
+
+result = client.bind_directory("/path/to/metadata", param_map_agsl_aardvark)
+print(result)
+```
+
+### Testing
+
+To run the test suite, execute:
+
+```bash
+pytest
+```
+
+This will run the unit tests located in the `tests` folder.
 
 ## License
 
@@ -61,4 +81,5 @@ Place this file in the root of your project.
 
 ## Acknowledgments
 
-This project is based on the [NOID](https://metacpan.org/dist/Noid/view/noid) utility and is designed to provide a simple Python interface for working with NOID identifiers.
+This project is based on the [NOID](https://metacpan.org/dist/Noid/view/noid)
+utility and is designed to provide a simple Python interface for working with NOID identifiers.
