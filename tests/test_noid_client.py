@@ -61,11 +61,21 @@ def test_bind_element(mock_subprocess, noid_client):
 
     expected_path = noid_client.db_path  # Dynamically get db_path from the client
     mock_subprocess.assert_called_once_with(
-        [noid_client.noid_path, "-f", expected_path, "bind", "set", ark, "where", "www.uwm.edu"],
+        [
+            noid_client.noid_path,
+            "-f",
+            expected_path,
+            "bind",
+            "set",
+            ark,
+            "where",
+            "www.uwm.edu",
+        ],
         capture_output=True,
         text=True,
         check=True,
     )
+
 
 @patch("subprocess.run")
 def test_get_all_elements(mock_subprocess, noid_client):
@@ -105,7 +115,14 @@ def test_validate_ark_success(mock_subprocess, noid_client):
 
     assert result is True
     mock_subprocess.assert_called_once_with(
-        ["/usr/local/bin/noid", "-f", noid_client.db_path, "validate", "-", "77981/gmgs1zcrnw"],
+        [
+            "/usr/local/bin/noid",
+            "-f",
+            noid_client.db_path,
+            "validate",
+            "-",
+            "77981/gmgs1zcrnw",
+        ],
         capture_output=True,
         text=True,
         check=True,
@@ -120,7 +137,14 @@ def test_validate_ark_failure(mock_subprocess, noid_client):
 
     assert result is False
     mock_subprocess.assert_called_once_with(
-        ["/usr/local/bin/noid", "-f", noid_client.db_path, "validate", "-", "77981/gmgs1zcrnw"],
+        [
+            "/usr/local/bin/noid",
+            "-f",
+            noid_client.db_path,
+            "validate",
+            "-",
+            "77981/gmgs1zcrnw",
+        ],
         capture_output=True,
         text=True,
         check=True,
@@ -132,28 +156,51 @@ def test_bind_multiple_elements(mock_subprocess, noid_client):
     """Test binding multiple elements to an ARK."""
     mock_subprocess.return_value.stdout = "Binding successful"
     ark = "77981/gmgs1zcrnw"
-    bind_params = {
-        "where": "www.uwm.edu",
-        "title": "Test Title",
-        "access": "Public"
-    }
+    bind_params = {"where": "www.uwm.edu", "title": "Test Title", "access": "Public"}
     result = noid_client.bind_multiple(ark, bind_params)
 
     assert len(result) == 3
     mock_subprocess.assert_any_call(
-        ["/usr/local/bin/noid", "-f", noid_client.db_path, "bind", "set", ark, "where", "www.uwm.edu"],
+        [
+            "/usr/local/bin/noid",
+            "-f",
+            noid_client.db_path,
+            "bind",
+            "set",
+            ark,
+            "where",
+            "www.uwm.edu",
+        ],
         capture_output=True,
         text=True,
         check=True,
     )
     mock_subprocess.assert_any_call(
-        ["/usr/local/bin/noid", "-f", noid_client.db_path, "bind", "set", ark, "title", "Test Title"],
+        [
+            "/usr/local/bin/noid",
+            "-f",
+            noid_client.db_path,
+            "bind",
+            "set",
+            ark,
+            "title",
+            "Test Title",
+        ],
         capture_output=True,
         text=True,
         check=True,
     )
     mock_subprocess.assert_any_call(
-        ["/usr/local/bin/noid", "-f", noid_client.db_path, "bind", "set", ark, "access", "Public"],
+        [
+            "/usr/local/bin/noid",
+            "-f",
+            noid_client.db_path,
+            "bind",
+            "set",
+            ark,
+            "access",
+            "Public",
+        ],
         capture_output=True,
         text=True,
         check=True,
@@ -166,9 +213,9 @@ def test_process_metadata_files(mock_rglob, noid_client):
     # Mock a Path object for the file
     mock_path = Path("test_file.json")
     mock_rglob.return_value = [mock_path]
-    
+
     mock_data = {"dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"]}
-    
+
     # Mock the file opening and reading for the specific Path object
     with patch("pathlib.Path.open", mock_open(read_data=json.dumps(mock_data))):
         documents = noid_client.process_metadata_files("some_directory")
@@ -177,10 +224,13 @@ def test_process_metadata_files(mock_rglob, noid_client):
     # Adjust the test to handle ark_id being a list
     assert documents[0][0] == ["ark:/77981/gmgs1zcrnw"]
 
-@patch.object(NoidClient, 'bind_multiple')
-@patch.object(NoidClient, 'validate', return_value=True)
+
+@patch.object(NoidClient, "bind_multiple")
+@patch.object(NoidClient, "validate", return_value=True)
 @patch("pathlib.Path.rglob")
-def test_bind_directory_success(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+def test_bind_directory_success(
+    mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path
+):
     """Test binding directory with valid metadata files."""
     # Mock a Path object for the file
     mock_path = tmp_path / "metadata.json"
@@ -191,10 +241,12 @@ def test_bind_directory_success(mock_rglob, mock_validate, mock_bind_multiple, n
         "dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"],
         "dct_title_s": "Test Title",
         "dct_accessRights_s": "Public",
-        "dct_references_s": json.dumps({
-            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
-            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw"
-        })
+        "dct_references_s": json.dumps(
+            {
+                "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
+                "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw",
+            }
+        ),
     }
 
     with mock_path.open("w") as f:
@@ -217,10 +269,12 @@ def test_bind_directory_success(mock_rglob, mock_validate, mock_bind_multiple, n
     mock_bind_multiple.assert_called_once_with("77981/gmgs1zcrnw", ANY)
 
 
-@patch.object(NoidClient, 'bind_multiple')
-@patch.object(NoidClient, 'validate', return_value=False)
+@patch.object(NoidClient, "bind_multiple")
+@patch.object(NoidClient, "validate", return_value=False)
 @patch("pathlib.Path.rglob")
-def test_bind_directory_invalid_identifier(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+def test_bind_directory_invalid_identifier(
+    mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path
+):
     """Test binding directory with invalid identifiers."""
     # Mock a Path object for the file
     mock_path = tmp_path / "metadata.json"
@@ -231,10 +285,12 @@ def test_bind_directory_invalid_identifier(mock_rglob, mock_validate, mock_bind_
         "dct_identifier_sm": ["invalid_ark"],
         "dct_title_s": "Test Title",
         "dct_accessRights_s": "Public",
-        "dct_references_s": json.dumps({
-            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/invalid_ark",
-            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/invalid_ark"
-        })
+        "dct_references_s": json.dumps(
+            {
+                "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/invalid_ark",
+                "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/invalid_ark",
+            }
+        ),
     }
 
     with mock_path.open("w") as f:
@@ -257,10 +313,12 @@ def test_bind_directory_invalid_identifier(mock_rglob, mock_validate, mock_bind_
     mock_bind_multiple.assert_not_called()
 
 
-@patch.object(NoidClient, 'bind_multiple')
-@patch.object(NoidClient, 'validate', return_value=True)
+@patch.object(NoidClient, "bind_multiple")
+@patch.object(NoidClient, "validate", return_value=True)
 @patch("pathlib.Path.rglob")
-def test_bind_directory_with_warnings(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+def test_bind_directory_with_warnings(
+    mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path
+):
     """Test binding directory with missing elements (warnings)."""
     # Mock a Path object for the file
     mock_path = tmp_path / "metadata.json"
@@ -269,10 +327,12 @@ def test_bind_directory_with_warnings(mock_rglob, mock_validate, mock_bind_multi
     # Create metadata with missing title and accessRights
     metadata = {
         "dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"],
-        "dct_references_s": json.dumps({
-            "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
-            "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw"
-        })
+        "dct_references_s": json.dumps(
+            {
+                "http://schema.org/url": "https://geodiscovery.uwm.edu/catalog/ark:/77981/gmgs1zcrnw",
+                "http://schema.org/downloadUrl": "https://geodiscovery.uwm.edu/download/ark:/77981/gmgs1zcrnw",
+            }
+        ),
     }
 
     with mock_path.open("w") as f:
@@ -295,17 +355,21 @@ def test_bind_directory_with_warnings(mock_rglob, mock_validate, mock_bind_multi
     mock_bind_multiple.assert_called_once_with("77981/gmgs1zcrnw", ANY)
 
 
-@patch.object(NoidClient, 'bind_multiple')
-@patch.object(NoidClient, 'validate', return_value=True)
+@patch.object(NoidClient, "bind_multiple")
+@patch.object(NoidClient, "validate", return_value=True)
 @patch("pathlib.Path.rglob")
-def test_bind_directory_with_invalid_json(mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path):
+def test_bind_directory_with_invalid_json(
+    mock_rglob, mock_validate, mock_bind_multiple, noid_client, tmp_path
+):
     """Test binding directory with invalid JSON in metadata file."""
     # Mock a Path object for the file
     mock_path = tmp_path / "metadata.json"
     mock_rglob.return_value = [mock_path]
 
     # Invalid JSON in metadata
-    invalid_metadata = '{"dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"], "dct_title_s": "Test Title"'
+    invalid_metadata = (
+        '{"dct_identifier_sm": ["ark:/77981/gmgs1zcrnw"], "dct_title_s": "Test Title"'
+    )
 
     mock_path.write_text(invalid_metadata)
 
