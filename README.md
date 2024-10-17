@@ -1,85 +1,110 @@
 
-# NOID Wrapper for Python
+# NOID Wrapper
 
-This Python library provides a wrapper around the [NOID](https://metacpan.org/dist/Noid/view/noid) (Nice Opaque Identifier) Perl utility, making it easier to interact with NOID minting, binding, and retrieving functionality from Python scripts.
+`noid-wrapper` is a Python library that provides a wrapper for interacting with the NOID (Nice Opaque Identifier) Perl utility. 
+It allows you to create NOID databases, mint and bind ARK identifiers, and perform various NOID operations.
 
 ## Features
 
-- **Minting Identifiers**: Easily mint a specified number of new identifiers.
-- **Binding Metadata**: Bind multiple metadata elements to identifiers.
-- **Fetching Metadata**: Retrieve metadata associated with an identifier.
-- **Validating ARKs**: Validate identifiers according to NOID rules.
-- **Process Metadata Files**: Recursively process metadata files in JSON format to extract and bind identifiers.
+- Create NOID databases using templates.
+- Mint identifiers based on NOID templates.
+- Bind elements to identifiers.
+- Fetch and get details for specific identifiers.
+- Validate identifiers.
+- Bind multiple elements to an identifier in batch.
 
-## Installation
+- Process AGSL metadata files to extract and bind ARK identifiers.
 
-1. **Fork & Clone the Repository:**
 
-2. **Create and Activate a Virtual Environment:**
+## Configuration
 
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
-
-3. **Install Dependencies:**
-
-     ```bash
-     poetry install
-     ```
-
-## Usage
-
-### Configuration
-
-The `config.yaml` file should specify the path to the NOID utility and the database location:
+The project uses a YAML configuration file, `config.yaml`, to manage paths, templates, and logging levels. Example configuration:
 
 ```yaml
 NOID:
   noid_path: "/usr/local/bin/noid"
-  db_path: "/path/to/noid/database"
-  
+  db_path: "/home/srappel/noid_wrapper"
+  template: ["gmgs.reeeeeek", "long", "77981", "University of Wisconsin-Milwaukee Libraries", "gmgs"]
+
 Logging:
-  level: "INFO"
+  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 ```
 
-### Example: Binding Metadata from JSON Files
+## Usage
 
-To bind metadata from JSON files located in a directory, use the following Python code:
+### Create a NoidClient Object and a NOID Database.
+
+The `dbcreate()` method is used to create a NOID database if it does not already exist:
 
 ```python
-from noid_client import NoidClient
+client = NoidClient("/path/to/config.yaml")
+if not client.dbexist()[0]:  # Check if the database exists
+    client.dbcreate()
+```
 
-client = NoidClient("config.yaml")
+This code is in the `if __name__ == "__main__"` loop, so it will run if you run noid_client.py.
 
-param_map_agsl_aardvark = {
-    "where": "dct_references_s",
-    "title": "dct_title_s",
-    "download": "dct_references_s",
-    "identifier": "dct_identifier_sm",
-    "ogm_aardvark_id": "id",
-    "access": "dct_accessRights_s",
+### Minting Identifiers
+
+To mint a new identifier:
+
+```python
+client.mint(count=1)
+```
+
+The count defaults to 1, so you can even just run `client.mint()` to get a single identifier!
+
+### Binding Elements
+
+To bind an element to an identifier:
+
+```python
+client.bind("identifier", "element", "value", "set")
+```
+
+There's also a function for binding multiple elements to an identifier at the same time:
+
+```python
+bind_params = {
+    "element1": "value1",
+    "element2": "value2",
+    "element3": "value3"
 }
 
-result = client.bind_directory("/path/to/metadata", param_map_agsl_aardvark)
-print(result)
+client.bind_multiple("identifier", bind_params, how="set")
 ```
 
-### Testing
+### Fetching Information for an Identifier
 
-To run the test suite, execute:
+To fetch details for a specific identifier:
 
-```bash
-pytest
+```python
+client.fetch("identifier")
 ```
 
-This will run the unit tests located in the `tests` folder.
+There's one for `get` as well, it works the same way.
+
+### Processing Metadata Files
+
+You can recursively process metadata files in a directory and bind ARK identifiers to a NOID database:
+
+```python
+client.bind_directory("/path/to/metadata", param_map)
+```
+
+## Development
+
+### Running Tests
+
+To run tests, use `pytest'
+
+
+### Code Style
+
+This project uses `black` for code formatting. 
+
+To format the code, run `black .`
 
 ## License
 
-[MIT License](LICENSE)
-
-## Acknowledgments
-
-This project is based on the [NOID](https://metacpan.org/dist/Noid/view/noid)
-utility and is designed to provide a simple Python interface for working with NOID identifiers.
+[MIT License](LICENSE).

@@ -324,6 +324,5 @@ class NoidClient:
 
 if __name__ == "__main__":
     client = NoidClient("/home/srappel/noid_wrapper/config.yaml")
-    if not client.dbexist()[0]: # if the database doesn't exist
+    if not client.dbexist()[0]:  # if the database doesn't exist
         client.dbcreate()
-        
