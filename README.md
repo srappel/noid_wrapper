@@ -15,6 +15,11 @@ It allows you to create NOID databases, mint and bind ARK identifiers, and perfo
 
 - Process AGSL metadata files to extract and bind ARK identifiers.
 
+### Features in Progress:
+
+- Configure re-direct functionality
+- Read from/Write to files, like CSV or reports
+- Better testing coverage
 
 ## Configuration
 
@@ -96,15 +101,15 @@ client.bind_directory("/path/to/metadata", param_map)
 
 ### Running Tests
 
-To run tests, use `pytest'
+To run tests, use `pytest`
 
 
 ### Code Style
 
-This project uses `black` for code formatting. 
+This project uses [black](https://black.readthedocs.io/en/stable/) for code formatting. 
 
-To format the code, run `black .`
+To format the code, run `black .` on a directory containing python files.
 
 ## License
 
-[MIT License](LICENSE).
+[MIT License](LICENSE)[.](https://upload.wikimedia.org/wikipedia/commons/transcoded/2/27/Domino%27s_Pizza_The_Noid_-_Punching_Machine_%281986%29.webm/Domino%27s_Pizza_The_Noid_-_Punching_Machine_%281986%29.webm.360p.vp9.webm)
