@@ -10,6 +10,8 @@ class NoidClient:
         self.config = self._load_config(config_path)
         self.noid_path = self.config["NOID"].get("noid_path", "noid")
         self.db_path = self.config["NOID"].get("db_path", ".")
+        self.template = self.config["NOID"].get("template", "")
+        self.required_files = ["__db.001", "__db.002", "__db.003"]
         self._setup_logging()
 
     def _load_config(self, config_path):
@@ -20,6 +22,51 @@ class NoidClient:
         log_level = self.config["Logging"].get("level", "INFO")
         logging.basicConfig(level=getattr(logging, log_level))
         self.logger = logging.getLogger(__name__)
+
+    def dbexist(self):
+        """Check to see if the database exists."""
+        db_PATH = Path(self.db_path)
+
+        if not db_PATH.exists():
+            self.logger.warning(f"No database found at: {self.db_path}")
+            return False, self.db_path
+
+        missing_files = [
+            f
+            for f in self.required_files
+            if not (Path(self.db_path + "/NOID/" + f)).exists()
+        ]
+
+        if missing_files:
+            self.logger.warning(
+                f"Incomplete database: missing files in {self.db_path} - {', '.join(missing_files)}"
+            )
+            return False, self.db_path
+
+        self.logger.info("Database exists and is complete.")
+        return True, self.db_path
+
+    def dbcreate(self):
+        """Create the NOID database if it doesn't exist."""
+        self.logger.info(f"Creating NOID database with pattern: {self.template}")
+
+        # Adjust how the command is passed, especially handling of spaces and quotes
+        dbcreate_command = [self.noid_path, "dbcreate"] + self.template
+
+        try:
+            result = subprocess.run(
+                dbcreate_command, capture_output=True, text=True, check=True
+            )
+            # Log the result's stdout if the command succeeds
+            self.logger.info(f"NOID database created successfully:\n{result.stdout}")
+
+        except subprocess.CalledProcessError as e:
+            # Handle CalledProcessError and log both stdout and stderr for debugging
+            self.logger.error(f"NOID command failed. Error: {e.stderr}")
+            self.logger.error(f"NOID stdout: {e.stdout}")
+            raise
+
+        return result
 
     def mint(self, count=1):
         """Mint a specified number of IDs. Default is 1."""
@@ -256,11 +303,20 @@ class NoidClient:
 
     def _run_noid_command(self, *args):
         """Run a NOID command using subprocess."""
+        if not self.dbexist():
+            return
+
         command = [self.noid_path, "-f", self.db_path] + list(args)
         self.logger.debug(f"Running command: {' '.join(command)}")
         try:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
+
+            if "parse_template" in result.stderr:
+                self.logger.error(f"Invalid dbcreate template. {e.stderr}")
+                raise RuntimeError("NOID database template invalid.")
+
         except subprocess.CalledProcessError as e:
+            # Handle CalledProcessError and log the error details
             self.logger.error(f"NOID command failed: {e.stderr}")
             raise
         return result.stdout
@@ -268,18 +324,6 @@ class NoidClient:
 
 if __name__ == "__main__":
     client = NoidClient("/home/srappel/noid_wrapper/config.yaml")
-
-    param_map_agsl_aardvark = {
-        "where": "dct_references_s",
-        "title": "dct_title_s",
-        "download": "dct_references_s",
-        "identifier": "dct_identifier_sm",
-        "ogm_aardvark_id": "id",
-        "access": "dct_accessRights_s",
-    }
-
-    result = client.bind_directory(
-        "/home/srappel/noid_wrapper/metadata", param_map_agsl_aardvark
-    )
-
-    print(result)
+    if not client.dbexist()[0]: # if the database doesn't exist
+        client.dbcreate()
+        

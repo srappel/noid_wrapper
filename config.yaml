@@ -1,6 +1,7 @@
 NOID:
   noid_path: "/usr/local/bin/noid"
   db_path: "/home/srappel/noid_wrapper" # Default is "." which will look in ./NOID
+  template: ["gmgs.reeeeeek", "long", "77981", "University of Wisconsin-Milwaukee Libraries", "gmgs"]
 
 Logging:
-  level: "WARNING"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
